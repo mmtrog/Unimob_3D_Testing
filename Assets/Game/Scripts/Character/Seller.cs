@@ -26,7 +26,7 @@
                 
                 var targetRotation = Quaternion.Euler(0, targetAngle, 0);
 
-                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 3f);
+                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
             }
         }
     }
