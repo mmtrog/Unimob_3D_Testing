@@ -1,7 +1,7 @@
-using UnityEngine;
-
-namespace Dasis.DesignPattern
+namespace Game.Scripts.GameModule
 {
+    using UnityEngine;
+
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _ins = null;

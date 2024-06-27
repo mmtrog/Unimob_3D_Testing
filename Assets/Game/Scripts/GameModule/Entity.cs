@@ -1,4 +1,8 @@
-public enum Entity
+namespace Game.Scripts.GameModule
 {
-	Fruit,
+	public enum Entity
+	{
+		Fruit,
+		Customer,
+	}
 }

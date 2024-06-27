@@ -4,8 +4,8 @@ namespace Game.Scripts.Objects.Tomato
 {
     using System;
     using System.Collections.Generic;
-    using Dasis.DesignPattern;
     using Game.Scripts.Character;
+    using Game.Scripts.GameModule;
 
     public class Plant : MonoBehaviour
     {
@@ -23,7 +23,7 @@ namespace Game.Scripts.Objects.Tomato
             {
                 foreach (var fruit in fruitList)
                 {
-                    if (fruit != null || fruit.IsReady) return fruit;
+                    if (fruit != null && fruit.IsReady) return fruit;
                 }
 
                 return null;
@@ -85,7 +85,7 @@ namespace Game.Scripts.Objects.Tomato
             
             if(fruit == null) return;
                 
-            character.Collect(fruit);
+            character.CollectFruit(fruit);
 
             fruitList.Remove(fruit);
         }

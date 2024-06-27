@@ -17,13 +17,17 @@ namespace Game.Scripts.Character
     {
         [SerializeField] private Animator animator;
 
-        [SerializeField] protected List<Transform> slotList;
+        [SerializeField] protected Rigidbody body;
         
+        [SerializeField] protected List<Transform> slotList;
+
         protected List<Fruit> fruitList = new ();
 
+        protected int limitFruit = 3;
+        
         private State state;
 
-        public bool ReachLimitSlot => fruitList.Count >= 3;
+        public bool ReachLimitSlot => fruitList.Count >= limitFruit;
         
         public State State
         {
@@ -34,6 +38,20 @@ namespace Game.Scripts.Character
                 
                 state = value;    
                 OnChangeState();
+            }
+        }
+        
+        public Fruit ReadyFruit
+        {
+            get
+            {
+                for (var index = fruitList.Count - 1; index >= 0; index--)
+                {
+                    var fruit = fruitList[index];
+                    if (fruit != null && fruit.IsReady) return fruit;
+                }
+
+                return null;
             }
         }
         
@@ -64,7 +82,23 @@ namespace Game.Scripts.Character
             }
         }
 
-        public void Collect(Fruit fruit)
+        public virtual void CollectFruit(Fruit fruit)
+        {
+            if(fruitList.Count >= 3) return;
+            
+            fruitList.Add(fruit);
+            
+            foreach (var slot in slotList)
+            {
+                if (slot.childCount == 0)
+                {
+                    fruit.Collect(slot);
+                    break;
+                }
+            }
+        }
+        
+        public void GiveFruit(Fruit fruit)
         {
             if(fruitList.Count >= 3) return;
             

@@ -64,7 +64,10 @@ namespace Game.Scripts.Objects.Tomato
             
             Transform.DOKill();
             
-            Transform.DOLocalMove(Vector3.zero, 0.3f).SetEase(Ease.InOutSine);
+            Transform.DOLocalMove(Vector3.zero, 0.3f).SetEase(Ease.InOutSine).OnComplete(() =>
+            {
+                IsReady = true;
+            });
         }
     }
 }
