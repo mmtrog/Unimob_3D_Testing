@@ -11,7 +11,7 @@ namespace Game.Scripts.Character
         
         private List<Customer> customerList = new ();
 
-        private float timeSpawnCounter = 0.5f;
+        private float timeSpawnCounter = 3f;
 
         private void Update()
         {
@@ -35,12 +35,14 @@ namespace Game.Scripts.Character
             
             customerList.Add(customer);
 
+            customer.OnSpawn();
+            
             if (CounterManager.Instance.GetQueue(customer, out var target))
             {
-                customer.SetTransformTarget(target);    
+                customer.SetPositionTarget(target.position); 
+                
+                customer.SetRotationTarget(target.parent.transform.position);
             }
-            
-            customer.OnSpawn();
         }
     }
 }

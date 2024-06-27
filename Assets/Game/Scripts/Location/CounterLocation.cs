@@ -27,59 +27,91 @@ namespace Game.Scripts.Location
             }
         }
         
-        public void CollectFruit(Fruit fruit)
+        public bool CollectFruit(Fruit fruit)
         {
             if (customerQueue.Count > 0)
             {
                 var customer = customerQueue.Peek();
                 
-                if (customer.ReachLimitSlot)
+                if(customer.LogicState == CustomerState.Buy)
                 {
-                    customer.MoveToCheckOut();
+                    if (customer.ReachLimitSlot)
+                    {
+                        customer.MoveToCheckOut();
                     
-                    customerQueue.Dequeue();    
-                }
-                else
-                {
+                        OnCustomerMoveOut(customer); 
+                        
+                        return false;
+                    }
+
                     customer.CollectFruit(fruit);
 
                     if (customer.ReachLimitSlot)
                     {
-                        customerQueue.Dequeue();
-                    }   
-                }
+                        OnCustomerMoveOut(customer);
+                    }
 
-                return;
+                    return true;
+                }
             }
 
-            if (fruitList.Count >= fruitSlotList.Count) return;
-         
-            Debug.Log("Counter: Place fruit");
-            
+            if (fruitList.Count >= fruitSlotList.Count) return false;
+
             fruitList.Add(fruit);
             
             foreach (var slot in fruitSlotList)
             {
                 if (slot.childCount == 0)
                 {
-                    fruit.Collect(slot);
+                    fruit.MoveToTarget(slot);
+                    
+                    Debug.Log("Counter: Place fruit");
+                    
+                    return true;
                 }
             }
+            
+            fruitList.Remove(fruit);
+            
+            return false;
+        }
+
+        private void OnCustomerMoveOut(Customer customer)
+        {
+            if(customerQueue.Count == 0) return;
+            
+            for (var index = 0; index < customerSlot.Count; index++)
+            {
+                var slot = customerSlot[index];
+                        
+                if (slot.customer != customer) continue;
+
+                slot.customer = null;
+
+                customerSlot[index] = slot;
+            }
+
+            customerQueue.Dequeue();      
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if (other.isTrigger && other.gameObject.name == "Customer (Clone)")
+            if (other.isTrigger && other.gameObject.name == "Customer(Clone)")
             {
                 if (!other.TryGetComponent<Customer>(out var customer)) return;
 
                 var fruit = ReadyFruit;
 
-                if (fruit == null) return;
+                if (fruit == null || customer.ReachLimitSlot) return;
 
                 customer.CollectFruit(fruit);
 
                 fruitList.Remove(fruit);
+                
+                if (customer.ReachLimitSlot)
+                {
+                    OnCustomerMoveOut(customer);
+                }
             }  
         }
     }

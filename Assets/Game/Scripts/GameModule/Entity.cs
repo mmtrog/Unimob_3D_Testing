@@ -4,5 +4,7 @@ namespace Game.Scripts.GameModule
 	{
 		Fruit,
 		Customer,
+		Box,
+		Cash,
 	}
 }

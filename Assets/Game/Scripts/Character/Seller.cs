@@ -21,12 +21,23 @@
             {
                 State = fruitList.Count > 0 ? State.CarryMove : State.Move;
                 
-                var targetAngle = Mathf.Atan2(handlePos.x, handlePos.y) * Mathf.Rad2Deg;
+                // var targetAngle = Mathf.Atan2(handlePos.x, handlePos.y) * Mathf.Rad2Deg;
+                //
+                // var targetRotation = Quaternion.Euler(0, targetAngle, 0);
+                //
+                // transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 8f);
                 
-                var targetRotation = Quaternion.Euler(0, targetAngle, 0);
-
-                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 8f);
+                Rotate(handlePos);
             }
+        }
+        
+        protected override void Rotate(Vector3 direction)
+        {
+            var targetAngle = Mathf.Atan2(direction.x, direction.y) * Mathf.Rad2Deg;
+            
+            var targetRotation = Quaternion.Euler(0, targetAngle, 0);
+            
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 8f);
         }
         
         private void OnTriggerStay(Collider other)
@@ -41,9 +52,10 @@
 
                 if (fruit == null) return;
 
-                counter.CollectFruit(fruit);
-
-                fruitList.Remove(fruit);
+                if (counter.CollectFruit(fruit))
+                {
+                    fruitList.Remove(fruit);   
+                }
             }  
         }
     }

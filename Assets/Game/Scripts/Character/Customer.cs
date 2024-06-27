@@ -1,22 +1,43 @@
 namespace Game.Scripts.Character
 {
+    using System;
+    using Cysharp.Threading.Tasks;
     using Game.Scripts.Manager;
+    using Game.Scripts.Objects;
     using Game.Scripts.Objects.Tomato;
     using UnityEngine;
+    using Random = UnityEngine.Random;
 
+    public enum CustomerState
+    {
+        Free = 0,
+        Buy = 1,
+        CheckOut = 2,
+        Recycle = 3,
+    }
+    
     public class Customer : Character
     {
-        public Transform Slot { get; set; }
+        private Vector3 targetPos;
+
+        private Vector3 targetRot;
+        
+        private bool isReachTarget;
+
+        private CustomerState logicState;
+        public  CustomerState LogicState => logicState;
 
         public int LimitFruit => limitFruit;
-
-        
-        
-        private Vector3 targetPos;
         
         public void OnSpawn()
         {
-            limitFruit = Random.Range(1, 5);
+            OnMoveOut = null;
+
+            isReachTarget = true;
+            
+            logicState = CustomerState.Free;
+            
+            limitFruit = Random.Range(1, 4);
 
             transform.localPosition = Vector3.zero;
             
@@ -25,16 +46,16 @@ namespace Game.Scripts.Character
             SetIdle();
         }
 
-        public void SetTarget(Vector3 targetPos)
+        public void SetPositionTarget(Vector3 targetPos)
         {
+            isReachTarget = false;
+            
             this.targetPos = targetPos;
         }
         
-        public void SetTransformTarget(Transform targetTrans)
+        public void SetRotationTarget(Vector3 targetRot)
         {
-            Slot = targetTrans;
-
-            targetPos = targetTrans.position;
+            this.targetRot = targetRot;
         }
         
         public void SetIdle()
@@ -46,21 +67,40 @@ namespace Game.Scripts.Character
         {
             var direction = targetPos - transform.position;
             
-            if (direction.magnitude <= 0.3f)
+            if (direction.magnitude <= 0.3f || isReachTarget)
             {
-                State = fruitList.Count > 0 ? State.CarryIdle : State.Idle;
+                if (!isReachTarget)
+                {
+                    State = fruitList.Count > 0 ? State.CarryIdle : State.Idle;
 
-                body.velocity = Vector3.zero;
+                    body.velocity = Vector3.zero;
+
+                    isReachTarget = true;
+                    
+                    if ((int) logicState < 2)
+                    {
+                        logicState = (CustomerState) Enum.GetValues(typeof(CustomerState)).GetValue((int) logicState + 1);
+                    }
+                    else
+                    {
+                        if (logicState == CustomerState.Recycle)
+                        {
+                            Recycle();
+                        }
+                    }
+                }
+                else
+                {
+                    var rotation = targetRot - transform.position;
+                    
+                    Rotate(rotation); 
+                }
             }
             else
             {
                 State = fruitList.Count > 0 ? State.CarryMove : State.Move;
                 
-                var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-                
-                var targetRotation = Quaternion.Euler(0, targetAngle, 0);
-
-                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+                Rotate(direction); 
             }
         }
         
@@ -74,7 +114,7 @@ namespace Game.Scripts.Character
             {
                 if (slot.childCount == 0)
                 {
-                    fruit.Collect(slot);
+                    fruit.MoveToTarget(slot);
                     break;
                 }
             }
@@ -84,12 +124,59 @@ namespace Game.Scripts.Character
                 MoveToCheckOut();
             }
         }
+        
+        public async void CollectBox(Box box)
+        {
+            box.MoveToTarget(slotList[0]);
+
+            await UniTask.Delay(400);
+            
+            MoveOut();
+        }
+
+        public Action OnMoveOut;
+        
+        private void MoveOut()
+        {
+            SetPositionTarget(new Vector3(-16f, 0, 3f));
+
+            logicState = CustomerState.Recycle;
+            
+            OnMoveOut?.Invoke();
+        }
+
+        public void RemoveFruit(Fruit fruit)
+        {
+            fruitList.Remove(fruit);  
+        }
 
         public void MoveToCheckOut()
         {
             CheckoutManager.Instance.GetQueue(this, out var queue);
                 
-            SetTransformTarget(queue);          
+            SetPositionTarget(queue.position);  
+            
+            SetRotationTarget(queue.parent.transform.position);
+        }
+
+        private void Recycle()
+        {
+            for (int i = 0; i < slotList[0].childCount; i++)
+            {
+                if (slotList[0].GetChild(0).TryGetComponent<Box>(out var box))
+                {
+                    box.Recycle();
+                    
+                    continue;
+                }
+                
+                if (slotList[0].GetChild(0).TryGetComponent<Fruit>(out var fruit))
+                {
+                    fruit.Recycle();
+                }
+            }
+            
+            gameObject.SetActive(false);   
         }
     }
 }

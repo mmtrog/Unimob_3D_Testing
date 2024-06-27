@@ -1,12 +1,13 @@
 ﻿namespace Game.Scripts.Location
 {
+    using System;
     using System.Collections.Generic;
     using Game.Scripts.Character;
     using UnityEngine;
 
     public class Location : MonoBehaviour
     {
-        [SerializeField] protected List<Transform> customerSlot;   
+        [SerializeField] protected List<QueueSlot> customerSlot = new();   
         
         protected Queue<Customer> customerQueue = new (); 
         
@@ -14,7 +15,7 @@
         {
             get
             {
-                if (!gameObject.activeInHierarchy) return false;
+                if (!gameObject.activeInHierarchy) return true;
 
                 return customerQueue.Count >= customerSlot.Count;
             }
@@ -29,12 +30,34 @@
                 return false;
             }
 
-            customerQueue.Enqueue(customer);
-
-            queue = customerSlot[customerQueue.Count - 1];
+            for (var index = 0; index < customerSlot.Count; index++)
+            {
+                var slot = customerSlot[index];
                 
-            return true;
+                if (slot.customer != null) continue;
+
+                customerQueue.Enqueue(customer);
+                
+                queue = slot.transform;
+
+                slot.customer = customer;
+
+                customerSlot[index] = slot;
+                
+                return true;
+            }
+            
+            queue = null;
+                
+            return false;
         }
     }
-    
+
+    [Serializable]
+    public struct QueueSlot
+    {
+        public Transform transform;
+
+        public Customer customer;
+    }
 }

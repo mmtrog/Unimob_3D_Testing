@@ -32,7 +32,7 @@ namespace Game.Scripts.Objects.Tomato
 
                 openSequence.Pause();
 
-                openSequence.Append(Transform.DOScale(new Vector3(3, 3, 3), 0.4f).SetEase(Ease.OutBack)).OnComplete(() =>
+                openSequence.Append(Transform.DOScale(new Vector3(2, 2, 2), 1f).SetEase(Ease.OutBack)).OnComplete(() =>
                 {
                     isReady = true;
                 });
@@ -40,6 +40,8 @@ namespace Game.Scripts.Objects.Tomato
                 initialized = true;
             }
 
+            isReady = false;
+            
             Transform.localScale = Vector3.zero;
             
             openSequence.Restart();
@@ -56,7 +58,7 @@ namespace Game.Scripts.Objects.Tomato
             gameObject.SetActive(true);
         }
 
-        public void Collect(Transform parent)
+        public void MoveToTarget(Transform parent)
         {
             IsReady = false;
 
@@ -64,10 +66,17 @@ namespace Game.Scripts.Objects.Tomato
             
             Transform.DOKill();
             
-            Transform.DOLocalMove(Vector3.zero, 0.3f).SetEase(Ease.InOutSine).OnComplete(() =>
+            Transform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.InOutSine).OnComplete(() =>
             {
                 IsReady = true;
             });
+        }
+
+        public void Recycle()
+        {
+            trans.parent = null;
+            
+            gameObject.SetActive(false);
         }
     }
 }

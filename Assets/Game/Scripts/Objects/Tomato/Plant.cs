@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Game.Scripts.Objects.Tomato
 {
-    using System;
     using System.Collections.Generic;
     using Game.Scripts.Character;
     using Game.Scripts.GameModule;
@@ -13,22 +12,11 @@ namespace Game.Scripts.Objects.Tomato
         
         [SerializeField] private List<Transform> slotList;
 
-        private List<Fruit> fruitList = new();
+        private Queue<Fruit> fruitQueue = new();
 
         private float timeSpawnCounter;
 
-        public Fruit ReadyFruit
-        {
-            get
-            {
-                foreach (var fruit in fruitList)
-                {
-                    if (fruit != null && fruit.IsReady) return fruit;
-                }
-
-                return null;
-            }
-        }
+        private bool ReachLimit => fruitQueue.Count >= 3;
         
         private void Start()
         {
@@ -42,11 +30,11 @@ namespace Game.Scripts.Objects.Tomato
 
         public bool OnFruit()
         {
-            if(fruitList.Count >= 3) return false;
+            if(fruitQueue.Count >= 3) return false;
 
             var newFruit = PoolManager.Instance.Spawn(Entity.Fruit).GetComponent<Fruit>();
 
-            fruitList.Add(newFruit);
+            fruitQueue.Enqueue(newFruit);
             
             foreach (var slot in slotList)
             {
@@ -62,6 +50,8 @@ namespace Game.Scripts.Objects.Tomato
 
         private void Update()
         {
+            if(ReachLimit) return;
+            
             timeSpawnCounter -= Time.deltaTime;
 
             if (timeSpawnCounter <= 0)
@@ -70,6 +60,11 @@ namespace Game.Scripts.Objects.Tomato
                 {
                     timeSpawnCounter = timePerSpawn;  
                 }
+                else
+                {
+                    timeSpawnCounter = timePerSpawn + 0.5f;    
+                }
+                    
             }
         }
 
@@ -79,15 +74,15 @@ namespace Game.Scripts.Objects.Tomato
 
             if (!other.TryGetComponent<Character>(out var character)) return;
             
-            if(character.ReachLimitSlot) return;
+            if(character.ReachLimitSlot || fruitQueue.Count == 0) return;
                 
-            var fruit = ReadyFruit;
+            var fruit = fruitQueue.Peek();
+                
+            if(!fruit.IsReady) return;
             
-            if(fruit == null) return;
-                
             character.CollectFruit(fruit);
 
-            fruitList.Remove(fruit);
+            fruitQueue.Dequeue();
         }
     }
 }

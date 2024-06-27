@@ -20,11 +20,12 @@ namespace Game.Scripts.Character
         [SerializeField] protected Rigidbody body;
         
         [SerializeField] protected List<Transform> slotList;
-
+        
+        [SerializeField]
         protected List<Fruit> fruitList = new ();
 
         protected int limitFruit = 3;
-        
+
         private State state;
 
         public bool ReachLimitSlot => fruitList.Count >= limitFruit;
@@ -84,7 +85,7 @@ namespace Game.Scripts.Character
 
         public virtual void CollectFruit(Fruit fruit)
         {
-            if(fruitList.Count >= 3) return;
+            if(fruitList.Count >= limitFruit) return;
             
             fruitList.Add(fruit);
             
@@ -92,25 +93,34 @@ namespace Game.Scripts.Character
             {
                 if (slot.childCount == 0)
                 {
-                    fruit.Collect(slot);
+                    fruit.MoveToTarget(slot);
                     break;
                 }
             }
         }
         
-        public void GiveFruit(Fruit fruit)
+        // public void GiveFruit(Fruit fruit)
+        // {
+        //     if(fruitList.Count >= 3) return;
+        //     
+        //     fruitList.Add(fruit);
+        //     
+        //     foreach (var slot in slotList)
+        //     {
+        //         if (slot.childCount == 0)
+        //         {
+        //             fruit.MoveToTarget(slot);
+        //         }
+        //     }
+        // }
+
+        protected virtual void Rotate(Vector3 direction)
         {
-            if(fruitList.Count >= 3) return;
-            
-            fruitList.Add(fruit);
-            
-            foreach (var slot in slotList)
-            {
-                if (slot.childCount == 0)
-                {
-                    fruit.Collect(slot);
-                }
-            }
+            var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                
+            var targetRotation = Quaternion.Euler(0, targetAngle, 0);
+
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * 8f);
         }
     }
 }
