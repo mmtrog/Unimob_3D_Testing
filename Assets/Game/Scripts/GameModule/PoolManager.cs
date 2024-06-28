@@ -54,7 +54,7 @@ namespace Game.Scripts.GameModule
             {
                 foreach (var pooledObject in _pooledObjects)
                 {
-                    if (!pooledObject.activeInHierarchy)
+                    if (!pooledObject.activeSelf)
                     {
                         pooledObject.transform.SetParent(_parent);   
                         

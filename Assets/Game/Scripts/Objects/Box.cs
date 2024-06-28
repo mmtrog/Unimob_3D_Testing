@@ -38,7 +38,7 @@ namespace Game.Scripts.Objects
             
             gameObject.SetActive(true);
 
-            modelTrans.DOScale(new Vector3(70f, 70f, 70f), 0.35f).SetEase(Ease.OutBack).OnComplete(() =>
+            modelTrans.DOScale(new Vector3(80, 60f, 80), 0.35f).SetEase(Ease.OutBack).OnComplete(() =>
             {
                 IsReady = true;
             });
@@ -46,7 +46,7 @@ namespace Game.Scripts.Objects
         
         public void CollectFruit(Fruit fruit)
         {
-            if(fruitList.Count >= 8) return;
+            //if(fruitList.Count >= 4) return;
             
             fruitList.Add(fruit);
             
@@ -55,9 +55,12 @@ namespace Game.Scripts.Objects
                 if (slot.childCount == 0)
                 {
                     fruit.MoveToTarget(slot);
-                    break;
+                    
+                    return;
                 }
             }
+
+            fruit.MoveToTarget(slotList[^1]);
         }
 
         public void MoveToTarget(Transform parent)
@@ -68,7 +71,7 @@ namespace Game.Scripts.Objects
             
             transform.DOKill();
             
-            transform.DOLocalMove(Vector3.zero, 0.3f).SetEase(Ease.InOutSine).OnComplete(() =>
+            transform.DOLocalMove(new Vector3(0, -0.25f, 0.2f), 0.3f).SetEase(Ease.InOutSine).OnComplete(() =>
             {
                 transform.DOLocalRotate(Vector3.zero, 0.2f).SetEase(Ease.Linear);
                 
@@ -94,6 +97,8 @@ namespace Game.Scripts.Objects
             {
                 fruit.Recycle();
             }
+
+            fruitList.Clear();
             
             transform.SetParent(null);
             

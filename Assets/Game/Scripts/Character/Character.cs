@@ -17,6 +17,8 @@ namespace Game.Scripts.Character
     {
         [SerializeField] private Animator animator;
 
+        [SerializeField] private ParticleSystem smokeFx;
+        
         [SerializeField] protected Rigidbody body;
         
         [SerializeField] protected List<Transform> slotList;
@@ -64,28 +66,32 @@ namespace Game.Scripts.Character
                     animator.SetBool("IsMove", false);
                     animator.SetBool("IsCarryMove", false);
                     animator.SetBool("IsEmpty", true);
+                    smokeFx.Stop();
                     break;
                 case State.Move:
                     animator.SetBool("IsMove", true);
                     animator.SetBool("IsCarryMove", false);
                     animator.SetBool("IsEmpty", true);
+                    smokeFx.Play();
                     break;
                 case State.CarryMove:
                     animator.SetBool("IsMove", true);
                     animator.SetBool("IsCarryMove", true);
                     animator.SetBool("IsEmpty", false);
+                    smokeFx.Play();
                     break;
                 case State.CarryIdle:
                     animator.SetBool("IsMove", false);
                     animator.SetBool("IsCarryMove", false);
                     animator.SetBool("IsEmpty", false);
+                    smokeFx.Stop();
                     break;
             }
         }
 
         public virtual void CollectFruit(Fruit fruit)
         {
-            if(fruitList.Count >= limitFruit) return;
+            if(fruitList.Count >= limitFruit || !fruit.IsReady) return;
             
             fruitList.Add(fruit);
             

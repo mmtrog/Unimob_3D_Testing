@@ -2,6 +2,7 @@ namespace Game.Scripts.Location
 {
     using System.Collections.Generic;
     using Cysharp.Threading.Tasks;
+    using DG.Tweening;
     using Game.Scripts.Character;
     using Game.Scripts.GameModule;
     using Game.Scripts.Objects;
@@ -9,6 +10,10 @@ namespace Game.Scripts.Location
 
     public class CheckoutLocation : Location
     {
+        [SerializeField] private Transform groundTrans;
+        
+        private bool playerIn;
+        
         private Box box;
 
         private Customer customer;
@@ -17,10 +22,34 @@ namespace Game.Scripts.Location
 
         public bool Processing { set; get; }
         
+        private void OnTriggerExit(Collider other)
+        {
+            if(!playerIn) return;
+            
+            if (other.gameObject.name != "Player") return;
+
+            if (playerIn)
+            {
+                groundTrans.DOKill();
+                
+                groundTrans.DOScale(new Vector3(3f, 0.1f, 2f), 0.3f).SetEase(Ease.OutBack);
+                
+                playerIn = false;
+            }   
+        }
+        
         private void OnTriggerStay(Collider other)
         {
             if (!other.isTrigger || other.gameObject.name != "Player") return;
-            //if (!other.TryGetComponent<Customer>(out var player)) return;
+            
+            if (!playerIn)
+            {
+                groundTrans.DOKill();
+                
+                groundTrans.DOScale(new Vector3(4f, 0.1f, 2.5f), 0.3f).SetEase(Ease.OutBack);
+                
+                playerIn = true;
+            }
 
             if (cashStack.Count > 0)
             {
@@ -44,9 +73,9 @@ namespace Game.Scripts.Location
 
                 if (fruit != null)
                 {
-                    box.CollectFruit(fruit);
-                    
                     customer.RemoveFruit(fruit);
+                    
+                    box.CollectFruit(fruit);
                 }
                 else
                 {
@@ -88,7 +117,7 @@ namespace Game.Scripts.Location
             
             var spawnCashPos = new Vector3(position.x, 0.5f, position.z);
             
-            SpawnCash(spawnCashPos, customer.LimitFruit);
+            SpawnCash(spawnCashPos, customer.LimitFruit * 5);
             
             customer.CollectBox(box);
 

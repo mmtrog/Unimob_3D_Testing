@@ -2,15 +2,23 @@ namespace Game.Scripts.Location
 {
     using System;
     using System.Collections.Generic;
+    using DG.Tweening;
     using Game.Scripts.Character;
+    using Game.Scripts.Manager;
     using Game.Scripts.Objects.Tomato;
     using UnityEngine;
 
     public class CounterLocation : Location
     {
+        [SerializeField] private Transform groundTrans;
+        
         [SerializeField] private List<Transform> fruitSlotList;
         
         private List<Fruit> fruitList = new();
+        
+        private bool playerIn;
+
+        private bool isChecking;
         
         public bool ReachLimitSlot => fruitList.Count >= fruitSlotList.Count;
         
@@ -29,33 +37,30 @@ namespace Game.Scripts.Location
         
         public bool CollectFruit(Fruit fruit)
         {
+            if (isChecking) return false;
+
+            isChecking = true;
+            
             if (customerQueue.Count > 0)
             {
                 var customer = customerQueue.Peek();
                 
-                if(customer.LogicState == CustomerState.Buy)
+                if(customer.LogicState == CustomerState.Buy && !customer.ReachLimitSlot)
                 {
-                    if (customer.ReachLimitSlot)
-                    {
-                        customer.MoveToCheckOut();
-                    
-                        OnCustomerMoveOut(customer); 
-                        
-                        return false;
-                    }
-
                     customer.CollectFruit(fruit);
 
-                    if (customer.ReachLimitSlot)
-                    {
-                        OnCustomerMoveOut(customer);
-                    }
-
+                    isChecking = false;
+                    
                     return true;
                 }
             }
 
-            if (fruitList.Count >= fruitSlotList.Count) return false;
+            if (fruitList.Count >= fruitSlotList.Count)
+            {
+                isChecking = false;
+                
+                return false;
+            }
 
             fruitList.Add(fruit);
             
@@ -65,13 +70,15 @@ namespace Game.Scripts.Location
                 {
                     fruit.MoveToTarget(slot);
                     
-                    Debug.Log("Counter: Place fruit");
+                    isChecking = false;
                     
                     return true;
                 }
             }
             
             fruitList.Remove(fruit);
+            
+            isChecking = false;
             
             return false;
         }
@@ -90,29 +97,85 @@ namespace Game.Scripts.Location
 
                 customerSlot[index] = slot;
             }
-
+            
             customerQueue.Dequeue();      
+        }
+
+        private void CheckQueue()
+        {
+            if(customerQueue.Count == 0) return;
+            
+            var customer = customerQueue.Peek();
+
+            if (!customer.ReachLimitSlot || CheckoutManager.Instance.IsFullQueue) return;
+            
+            customer.MoveToCheckOut();
+                        
+            OnCustomerMoveOut(customer);
+        }
+
+        private void Update()
+        {
+            CheckQueue();         
+        }
+        
+        private void OnTriggerExit(Collider other)
+        {
+            if(!playerIn) return;
+            
+            if (other.gameObject.name != "Player") return;
+
+            if (playerIn)
+            {
+                groundTrans.DOKill();
+                
+                groundTrans.DOScale(new Vector3(3f, 0.1f, 2f), 0.3f).SetEase(Ease.OutBack);
+                
+                playerIn = false;
+            }   
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if (other.isTrigger && other.gameObject.name == "Customer(Clone)")
+            if (other.isTrigger && other.gameObject.name == "Player")
             {
-                if (!other.TryGetComponent<Customer>(out var customer)) return;
-
-                var fruit = ReadyFruit;
-
-                if (fruit == null || customer.ReachLimitSlot) return;
-
-                customer.CollectFruit(fruit);
-
-                fruitList.Remove(fruit);
-                
-                if (customer.ReachLimitSlot)
+                if (!playerIn)
                 {
-                    OnCustomerMoveOut(customer);
+                    groundTrans.DOKill();
+                
+                    groundTrans.DOScale(new Vector3(4f, 0.1f, 3f), 0.3f).SetEase(Ease.OutBack);
+                
+                    playerIn = true;
                 }
-            }  
+            }
+            
+            if(isChecking) return;
+            
+            if (!other.isTrigger || other.gameObject.name != "Customer(Clone)") return;
+            
+            isChecking = true;
+
+            if (!other.TryGetComponent<Customer>(out var customer) || customer.ReachLimitSlot)
+            {
+                isChecking = false;
+                
+                return;
+            }
+                
+            var fruit = ReadyFruit;
+
+            if (fruit == null)
+            {
+                isChecking = false;
+                
+                return;
+            }
+
+            customer.CollectFruit(fruit);
+
+            fruitList.Remove(fruit);
+            
+            isChecking = false;
         }
     }
 }

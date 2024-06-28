@@ -5,6 +5,7 @@ namespace Game.Scripts.Character
     using Game.Scripts.Manager;
     using Game.Scripts.Objects;
     using Game.Scripts.Objects.Tomato;
+    using Game.Scripts.Scriptable;
     using UnityEngine;
     using Random = UnityEngine.Random;
 
@@ -18,6 +19,12 @@ namespace Game.Scripts.Character
     
     public class Customer : Character
     {
+        [SerializeField] private CustomerInfoDisplay infoDisplay;
+        
+        [SerializeField] private SkinnedMeshRenderer mesh;
+
+        [SerializeField] private CustomerSO customerSO;
+        
         private Vector3 targetPos;
 
         private Vector3 targetRot;
@@ -31,13 +38,19 @@ namespace Game.Scripts.Character
         
         public void OnSpawn()
         {
+            mesh.material = customerSO.materials[Random.Range(0, customerSO.materials.Count)];
+            
             OnMoveOut = null;
 
+            infoDisplay.UpdateStatus(0);
+            
             isReachTarget = true;
             
             logicState = CustomerState.Free;
             
-            limitFruit = Random.Range(1, 4);
+            limitFruit = Random.Range(1, 5);
+            
+            infoDisplay.SetUp(limitFruit);
 
             transform.localPosition = Vector3.zero;
             
@@ -123,10 +136,10 @@ namespace Game.Scripts.Character
 
             OnCollectFruit.Invoke(fruitList.Count);
             
-            if (fruitList.Count == limitFruit)
-            {
-                MoveToCheckOut();
-            }
+            // if (fruitList.Count == limitFruit)
+            // {
+            //     MoveToCheckOut();
+            // }
         }
         
         public async void CollectBox(Box box)
@@ -142,6 +155,8 @@ namespace Game.Scripts.Character
         
         private void MoveOut()
         {
+            infoDisplay.UpdateStatus(2);
+            
             SetPositionTarget(new Vector3(-16f, 0, 3f));
 
             logicState = CustomerState.Recycle;
@@ -156,6 +171,8 @@ namespace Game.Scripts.Character
 
         public void MoveToCheckOut()
         {
+            infoDisplay.UpdateStatus(1);
+            
             CheckoutManager.Instance.GetQueue(this, out var queue);
                 
             SetPositionTarget(queue.position);  
@@ -167,20 +184,22 @@ namespace Game.Scripts.Character
         {
             for (int i = 0; i < slotList[0].childCount; i++)
             {
-                if (slotList[0].GetChild(0).TryGetComponent<Box>(out var box))
+                if (slotList[0].GetChild(i).TryGetComponent<Box>(out var box))
                 {
                     box.Recycle();
                     
                     continue;
                 }
                 
-                if (slotList[0].GetChild(0).TryGetComponent<Fruit>(out var fruit))
+                if (slotList[0].GetChild(i).TryGetComponent<Fruit>(out var fruit))
                 {
                     fruit.Recycle();
                 }
             }
             
-            gameObject.SetActive(false);   
+            fruitList.Clear();
+            
+            gameObject.SetActive(false);
         }
     }
 }

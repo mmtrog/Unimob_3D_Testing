@@ -1,17 +1,26 @@
 namespace Game.Scripts.Character
 {
+    using System;
     using System.Collections.Generic;
     using Game.Scripts.GameModule;
     using Game.Scripts.Manager;
     using UnityEngine;
+    using Random = UnityEngine.Random;
 
     public class CustomerManager : Singleton<CustomerManager>
     {
-        [SerializeField] private float timePerSpawn = 4;
+        private float timePerSpawn;
         
         private List<Customer> customerList = new ();
 
         private float timeSpawnCounter = 3f;
+
+        private void Start()
+        {
+            Application.targetFrameRate = 60;
+
+            timePerSpawn = Random.Range(3.5f, 5f);
+        }
 
         private void Update()
         {
@@ -30,6 +39,8 @@ namespace Game.Scripts.Character
         private void SpawnCustomer()
         {
             if(CounterManager.Instance.IsFullQueue) return;
+            
+            timePerSpawn = Random.Range(3.5f, 5f);
             
             var customer = PoolManager.Instance.Spawn(Entity.Customer).GetComponent<Customer>();
             

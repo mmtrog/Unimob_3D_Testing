@@ -7,15 +7,27 @@ namespace Game.Scripts.Manager
     {
         private int amount;
 
-        public int CashAmount => amount;
-
         public Action<int> OnCashChange;
-        
-        public void AddCash(int amount)
+
+        public bool TryUseCash(int subtract)
         {
-            this.amount += amount;
+            if (subtract <= amount)
+            {
+                amount -= subtract;
+                
+                OnCashChange.Invoke(amount);
+                
+                return true;
+            }
+
+            return false;
+        }
+        
+        public void AddCash(int increase)
+        {
+            amount += increase;
             
-            OnCashChange.Invoke(this.amount);
+            OnCashChange.Invoke(amount);
         }
     }
 }

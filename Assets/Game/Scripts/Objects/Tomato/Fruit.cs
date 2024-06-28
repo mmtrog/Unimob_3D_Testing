@@ -2,73 +2,69 @@ using UnityEngine;
 
 namespace Game.Scripts.Objects.Tomato
 {
+    using System;
     using DG.Tweening;
 
     public class Fruit : MonoBehaviour
     {
         [SerializeField] private Transform trans;
-        
+
         private bool initialized;
 
-        private bool isReady;
+        private Sequence reachTargetAnim;
         
-        private Sequence openSequence;
+        private bool isReady;
+        public  bool IsReady => isReady;
 
-        public Transform Transform => trans;
-
-        public bool IsReady
-        {
-            get => isReady;
-            set => isReady = value;
-        }
-
-        private void OnEnable()
+        private void Start()
         {
             if (!initialized)
             {
-                openSequence = DOTween.Sequence();
+                reachTargetAnim = DOTween.Sequence();
 
-                openSequence.SetAutoKill(false);
+                reachTargetAnim.SetAutoKill(false);
 
-                openSequence.Pause();
-
-                openSequence.Append(Transform.DOScale(new Vector3(2, 2, 2), 1f).SetEase(Ease.OutBack)).OnComplete(() =>
-                {
-                    isReady = true;
-                });
+                reachTargetAnim.Pause();
+                
+                reachTargetAnim.Append(trans.DOScale(new Vector3(4f, 4f, 4f), 0.2f).SetEase(Ease.OutBack));
+                
+                reachTargetAnim.Append(trans.DOScale(new Vector3(3f, 3f, 3f), 0.15f).SetEase(Ease.Linear));
                 
                 initialized = true;
-            }
-
-            isReady = false;
-            
-            Transform.localScale = Vector3.zero;
-            
-            openSequence.Restart();
+            }   
         }
 
         public void Regenerate(Transform parent)
         {
+            trans.DOKill();
+            
             isReady = false;
             
-            Transform.SetParent(parent);
+            trans.SetParent(parent);
+
+            trans.localScale = Vector3.zero;
             
-            Transform.localPosition = Vector3.zero;
+            trans.localPosition = Vector3.zero;
             
-            gameObject.SetActive(true);
+            trans.DOScale(new Vector3(3, 3, 3), 0.2f).SetEase(Ease.OutBack).OnComplete(() =>
+            {
+                isReady = true;
+            });
         }
 
         public void MoveToTarget(Transform parent)
         {
-            IsReady = false;
+            isReady = false;
 
-            Transform.SetParent(parent);
+            trans.DOKill();
             
-            Transform.DOKill();
-            
-            Transform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.InOutSine).OnComplete(() =>
+            trans.SetParent(parent);
+
+            trans.DOLocalMove(Vector3.zero, 0.3f).SetEase(Ease.Linear).OnComplete(() =>
             {
-                IsReady = true;
+                reachTargetAnim.Restart();
+                
+                isReady = true;
             });
         }
 
@@ -76,6 +72,8 @@ namespace Game.Scripts.Objects.Tomato
         {
             trans.parent = null;
             
+            isReady = false;
+
             gameObject.SetActive(false);
         }
     }

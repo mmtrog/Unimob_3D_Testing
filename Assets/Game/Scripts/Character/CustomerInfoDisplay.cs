@@ -5,23 +5,32 @@ using UnityEngine;
 
 namespace Game.Scripts.Character
 {
+    using Camera = UnityEngine.Camera;
+
     public class CustomerInfoDisplay : MonoBehaviour
     {
         [SerializeField] private List<GameObject> statusLabels;
 
         [SerializeField] private TextMeshPro fruitRequiredTMP;
 
-        private Customer customer;
-
+        [SerializeField] private Customer customer;
+        
         private int limitFruit;
+
+        private Transform cameraTrans;
         
         private void Start()
         {
-            customer = transform.parent.GetComponent<Customer>();
-
-            limitFruit = customer.LimitFruit;
+            cameraTrans = Camera.main.transform;
             
             customer.OnCollectFruit += UpdateFruitAmount;
+        }
+
+        public void SetUp(int limitFruit)
+        {
+            this.limitFruit = limitFruit;
+            
+            fruitRequiredTMP.text = $"0/{limitFruit}";
         }
 
         public void UpdateFruitAmount(int amount)
@@ -29,12 +38,18 @@ namespace Game.Scripts.Character
             fruitRequiredTMP.text = $"{amount}/{limitFruit}";
         }
         
-        public void UpdateStatus(CustomerState state)
+        public void UpdateStatus(int state)
         {
-            switch (state)
+            var i = 0;
+            for (; i < 3; i++)
             {
-                  
+                statusLabels[i].SetActive(i == state);
             }
+        }
+
+        private void Update()
+        {
+            transform.LookAt(cameraTrans);
         }
     }
 }
