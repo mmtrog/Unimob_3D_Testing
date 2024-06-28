@@ -6,7 +6,7 @@
     public class Seller : Character
     {
         [SerializeField] private RectTransform handle;
-
+        
         private void Update()
         {
             var handlePos = handle.localPosition;

@@ -1,19 +1,40 @@
+using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Scripts.Character
 {
     public class CustomerInfoDisplay : MonoBehaviour
     {
-        // Start is called before the first frame update
-        void Start()
-        {
+        [SerializeField] private List<GameObject> statusLabels;
+
+        [SerializeField] private TextMeshPro fruitRequiredTMP;
+
+        private Customer customer;
+
+        private int limitFruit;
         
+        private void Start()
+        {
+            customer = transform.parent.GetComponent<Customer>();
+
+            limitFruit = customer.LimitFruit;
+            
+            customer.OnCollectFruit += UpdateFruitAmount;
         }
 
-        // Update is called once per frame
-        void Update()
+        public void UpdateFruitAmount(int amount)
         {
+            fruitRequiredTMP.text = $"{amount}/{limitFruit}";
+        }
         
+        public void UpdateStatus(CustomerState state)
+        {
+            switch (state)
+            {
+                  
+            }
         }
     }
 }

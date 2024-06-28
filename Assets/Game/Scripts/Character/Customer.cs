@@ -103,6 +103,8 @@ namespace Game.Scripts.Character
                 Rotate(direction); 
             }
         }
+
+        public Action<int> OnCollectFruit;
         
         public override void CollectFruit(Fruit fruit)
         {
@@ -119,6 +121,8 @@ namespace Game.Scripts.Character
                 }
             }
 
+            OnCollectFruit.Invoke(fruitList.Count);
+            
             if (fruitList.Count == limitFruit)
             {
                 MoveToCheckOut();
